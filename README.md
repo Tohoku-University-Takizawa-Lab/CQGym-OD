@@ -7,10 +7,11 @@ Multi-access Edge Computing (MEC) and High Performance Computing (HPC) tasks are
 CQGym-mec is developed based on [CQGym](https://github.com/SPEAR-UIC/CQGym). 
 
 ## Features
-TBD
+The scheduling result is evaluated.
 
 ## Modules
-TBD
+- Evaluate.py (Newly Designed)
+  - Evaluate the scheduling results.
 
 ## Usages
 train DQL model `dql0` using the first 1,500 traces of SDSC-SP2-1998-4-2-cln.swf 
