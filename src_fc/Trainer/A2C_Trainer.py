@@ -55,7 +55,7 @@ def model_training(env, weights_file_name=None, is_training=False, output_file_n
     if is_training and output_file_name:
         a2c.save_using_model_name(output_file_name)
 
-    return a2c.reward_seq
+    return a2c.rewards_seq
 
 def model_engine(module_list, module_debug, job_cols=0, window_size=0, sys_size=0,
                  is_training=False, weights_file=None, output_file=None, do_render=False, learning_rate=0.1, reward_discount=0.99, batch_size=10, layer_size=[]):

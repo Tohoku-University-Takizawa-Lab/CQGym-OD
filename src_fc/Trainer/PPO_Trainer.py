@@ -56,7 +56,7 @@ def model_training(env, weights_file_name=None, is_training=False, output_file_n
     if is_training and output_file_name:
         ppo.save_using_model_name(output_file_name)
 
-    return ppo.reward_seq
+    return ppo.rewards_seq
 
 
 def model_engine(module_list, module_debug, job_cols=0, window_size=0, sys_size=0,
