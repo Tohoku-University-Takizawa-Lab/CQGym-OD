@@ -13,23 +13,21 @@ TBD
 TBD
 
 ## Usages
-The first train episode
+train DQL model `dql0` using the first 1,500 traces of SDSC-SP2-1998-4-2-cln.swf 
 ```
-python cqsim.py -j train.swf -n train.swf -R 1500 --is_training 1 --output_weight_file pg0 --rl_alg PG
+python cqsim.py -j SDSC-SP2-1998-4-2-cln.swf -n SDSC-SP2-1998-4-2-cln.swf -R 1500 --is_training 1 --output_weight_file dql0 --rl_alg DQL 
 ```
-The second train episode
+train DQL model `dql1` based `dql0` using trace 1501~3000 of SDSC-SP2-1998-4-2-cln.swf 
 ```
-python cqsim.py -j train.swf -n train.swf -r 1501 -R 1500 --is_training 1 --input_weight_file pg0 --output_weight_file pg1 --rl_alg PG
+python cqsim.py -j SDSC-SP2-1998-4-2-cln.swf -n SDSC-SP2-1998-4-2-cln.swf -r 1501 -R 1500 --is_training 1 --input_weight_file dql0 --output_weight_file dql1 --rl_alg DQL
 ```
-
-Validation using the first episode output
+test the performance of `dql0` using trace 3001~8000 of SDSC-SP2-1998-4-2-cln.swf 
 ```
-python cqsim.py -j validate.swf -n validate.swf -R 5000 --is_training 0 --input_weight_file pg0 --rl_alg PG
+python cqsim.py -j SDSC-SP2-1998-4-2-cln.swf -n SDSC-SP2-1998-4-2-cln.swf -r 3001 -R 5000 --is_training 0 --input_weight_file dql0 --rl_alg DQL
 ```
-
-Validation using the second episode output
+test the performance of `dql1` using trace 3001~8000 of SDSC-SP2-1998-4-2-cln.swf 
 ```
-python cqsim.py -j validate.swf -n validate.swf -R 5000 --is_training 0 --input_weight_file pg1 --rl_alg PG
+python cqsim.py -j SDSC-SP2-1998-4-2-cln.swf -n SDSC-SP2-1998-4-2-cln.swf -r 3001 -R 5000 --is_training 0 --input_weight_file dql1 --rl_alg DQL
 ```
 
 ## Environments
