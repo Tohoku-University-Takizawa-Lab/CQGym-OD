@@ -51,6 +51,7 @@ class Job_trace:
     def reset_data(self):
         #self.debug.debug("* "+self.myInfo+" -- reset_data",5)
         self.job_wait_size = 0
+        self.job_wait_on_demand_id = 0
         self.job_submit_list=[]
         self.job_wait_list=[]
         self.job_run_list=[]
@@ -265,10 +266,21 @@ class Job_trace:
         self.jobTrace[job_index]["score"]=job_score
         self.jobTrace[job_index]["estStart"]=job_est_start
         self.job_submit_list.remove(job_index)
-        self.job_wait_list.append(job_index)
+        if (self.jobTrace[job_index]["id"] - 1 == self.job_wait_on_demand_id and len(self.job_wait_list) > 0) : 
+           # prevision job arrives
+           self.job_wait_list.insert(0, job_index)
+        else:
+            self.job_wait_list.append(job_index)
         self.job_wait_size += self.jobTrace[job_index]["reqProc"]
         return 1
     
+    def job_set_wait(self, job_index):
+        if (self.job_wait_on_demand_id == 0): # only one on demand triggers prevision event
+            self.job_wait_on_demand_id = job_index
+            return 1
+        else:
+            return 0
+
     def job_start (self, job_index, time):
         #self.debug.debug("* "+self.myInfo+" -- job_start",5)
         self.debug.debug(" "+"["+str(job_index)+"]"+" Req:"+str(self.jobTrace[job_index]['reqProc'])+" Run:"+str(self.jobTrace[job_index]['run'])+" ",4)
@@ -285,8 +297,12 @@ class Job_trace:
         #self.debug.debug("* "+self.myInfo+" -- job_finish",5)
         self.debug.debug(" "+"["+str(job_index)+"]"+" Req:"+str(self.jobTrace[job_index]['reqProc'])+" Run:"+str(self.jobTrace[job_index]['run'])+" ",4)
         self.jobTrace[job_index]["state"]=3
+        # self.debug.debug(str(self.job_wait_on_demand_id) + " before clear",4)
+        if (self.job_wait_on_demand_id == self.jobTrace[job_index]["id"] - 1) :
+            self.job_wait_on_demand_id = 0
         if  time:
             self.jobTrace[job_index]['end'] = time
+        # self.debug.debug(str(self.job_wait_on_demand_id) + " after clear",4)
         self.job_run_list.remove(job_index)
         #self.job_done_list.append(job_index)
         return 1

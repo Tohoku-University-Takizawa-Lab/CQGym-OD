@@ -90,9 +90,16 @@ class Cqsim_sim(Pause, Thread):
         i = self.read_job_pointer
         #while (i < len(self.module['job'].job_info())):
         while (i < self.module['job'].job_info_len()):
-            self.insert_event(1,self.module['job'].job_info(i)['submit'],2,[1,i])
-            self.previous_read_job_time = self.module['job'].job_info(i)['submit']
-            self.debug.debug("  "+"Insert job["+"2"+"] "+str(self.module['job'].job_info(i)['submit']),4)
+            if (self.module['job'].job_info(i)['mec'] <= 0):
+                if (self.module['job'].job_info(i)['mec'] == -1):
+                    self.debug.debug("####################### on demand job loaded ##########################", 4) 
+                self.insert_event(1,self.module['job'].job_info(i)['submit'],2,[1,i])
+                self.previous_read_job_time = self.module['job'].job_info(i)['submit']
+                self.debug.debug("  "+"Insert job["+"2"+"] "+str(self.module['job'].job_info(i)['submit']),4)
+            else:
+                self.debug.debug("####################### on demand job notice of " + str(self.module['job'].job_info(i)['mec'] - 1) + " loaded ##########################", 4)
+                # submit a resource prevision event, event type 3, job id received from notice
+                self.insert_event(3, self.module['job'].job_info(i)['submit'],2,[3,self.module['job'].job_info(i)['mec'] - 1])
             i += 1
 
         if temp_return == None or temp_return < 0 :
@@ -106,9 +113,11 @@ class Cqsim_sim(Pause, Thread):
         #self.debug.debug("# "+self.myInfo+" -- insert_event",5) 
         temp_index = -1
         new_event = {"type":type, "time":time, "prio":priority, "para":para}
-        if (type == 1):
+        if (type == 1 or type ==3):
             #i = self.event_pointer
             i = 0
+            if (type == 3):
+                self.debug.debug("####################### a notice inserted ##########################", 4)
             while (i<len(self.event_seq)):
                 if (self.event_seq[i]['time']==time):
                     if (self.event_seq[i]['prio']>priority):
@@ -161,6 +170,22 @@ class Cqsim_sim(Pause, Thread):
                 self.debug.line(2, "--")
                 
                 self.event_job(self.current_event['para'])
+            if self.current_event['type'] == 3:
+                self.debug.line(2, " ")
+                self.debug.line(2, ">>>")
+                self.debug.line(2, "--")
+                self.debug.debug("  Time: "+str(self.currentTime), 2)
+                self.debug.debug("   "+str(self.current_event), 2)
+                self.debug.line(2, "--")
+                self.debug.debug("  Wait: "+str(self.module['job'].wait_list()),2) 
+                self.debug.debug("  Run : "+str(self.module['job'].run_list()),2) 
+                self.debug.line(2, "--")
+                self.debug.debug("  Tot:"+str(self.module['node'].get_tot())+" Idle:"+str(self.module['node'].get_idle())+" Avail:"+str(self.module['node'].get_avail())+" ",2)
+                self.debug.line(2, "--")
+                
+                self.debug.debug("####################### a notice evented ##########################", 4)
+                
+                self.event_job(self.current_event['para'])
 
             self.sys_collect()
 
@@ -174,9 +199,30 @@ class Cqsim_sim(Pause, Thread):
     def event_job(self, para_in = None):
 
         if (self.current_event['para'][0] == 1):
+            if (self.module['job'].job_info(self.current_event['para'][1])['mec'] == -1):
+                self.debug.debug("####################### on demand job " + str(self.current_event['para'][1]) + " submitted", 3)
             self.submit(self.current_event['para'][1])
         elif (self.current_event['para'][0] == 2):
             self.finish(self.current_event['para'][1])
+        elif (self.current_event['para'][0] == 3 and self.module['node'].prepared_job == -1 and self.module['node'].preparing_job == -1):
+            # if prevision event set successfully
+            if(self.set_wait(self.current_event['para'][1])):
+                # enough resource directly
+                if(self.module['node'].node_allocate( 64, # magic number
+                                                self.current_event['para'][1], 
+                                                self.currentTime + 1800, # magic number
+                                                self.currentTime + 1800 + 1200)): # magic number
+                    # self.debug.debug("####################### reserve resource for job " + str(self.current_event['para'][1]), 4)
+                    self.module['node'].prepared_job = self.current_event['para'][1]
+                # start node collecting
+                else:
+                    # self.debug.debug("####################### collected " + str(self.module['node'].avail) + " node for job " + str(self.current_event['para'][1]), 4)
+                    self.module['node'].preparing_job = self.current_event['para'][1]
+                    self.module['node'].preparing_node = self.module['node'].avail
+                    self.module['node'].node_allocate( self.module['node'].avail,
+                                                self.current_event['para'][1],\
+                                                self.currentTime, # magic number
+                                                self.currentTime + 1800 + 1200)# magic number
         # Obsolete
         # self.score_calculate()
         self.start_scan()
@@ -187,10 +233,39 @@ class Cqsim_sim(Pause, Thread):
         self.module['job'].job_submit(job_index)
         return
     
+    def set_wait(self, job_index):
+        #self.debug.debug("# "+self.myInfo+" -- submit",5) 
+        self.debug.debug("[Set wait]  "+str(job_index),3)
+        return self.module['job'].job_set_wait(job_index)
+
     def finish(self, job_index):
         #self.debug.debug("# "+self.myInfo+" -- finish",5) 
         self.debug.debug("[Finish]  "+str(job_index),3)
         self.module['node'].node_release(job_index,self.currentTime)
+        # prevision job finished
+        if (self.module['node'].prepared_job == job_index):
+            self.module['node'].prepared_job = -1
+        # collecting resource
+        if (self.module['node'].preparing_job != -1):
+            # enough after allocation
+            if ((self.module['node'].avail + self.module['node'].preparing_node) >= 64):
+                # self.debug.debug("####################### job " + str(self.module['node'].preparing_job) + " collect " + str(64 - self.module['node'].preparing_node) + " and become sufficient.", 4)
+                self.module['node'].node_allocate (64 - self.module['node'].preparing_node, # magic number
+                                                self.module['node'].preparing_job, # magic number
+                                                self.currentTime,
+                                                self.currentTime + 1200) # magic number
+                self.module['node'].node_extend(self.module['node'].preparing_job, 64, self.currentTime + 1200) # magic number
+                self.module['node'].prepared_job = self.module['node'].preparing_job
+                self.module['node'].preparing_job = -1
+            # still need allocation
+            else: 
+                # self.debug.debug("####################### job " + str(self.module['node'].preparing_job) + " collect " + str(self.module['node'].avail) + " and still need.", 4)
+                self.module['node'].preparing_node += self.module['node'].avail
+                self.module['node'].node_allocate (self.module['node'].avail,
+                                self.module['node'].preparing_job,\
+                                self.currentTime,\
+                                self.currentTime + 1200) # magic number
+                self.module['node'].node_extend(self.module['node'].preparing_job, self.module['node'].preparing_node, self.currentTime + 1200) # magic number
         self.module['job'].job_finish(job_index)
         self.module['output'].print_result(self.module['job'], job_index)
         self.module['job'].remove_job_from_dict(job_index)
@@ -199,9 +274,10 @@ class Cqsim_sim(Pause, Thread):
     def start_job(self, job_index):
         # self.debug.debug("# "+self.myInfo+" -- start",5)
         self.debug.debug("[Start]  "+str(job_index), 3)
-        self.module['node'].node_allocate(self.module['job'].job_info(job_index)['reqProc'], job_index,
-                                          self.currentTime, self.currentTime +
-                                          self.module['job'].job_info(job_index)['reqTime'])
+        if (self.module['node'].prepared_job != job_index):
+            self.module['node'].node_allocate(self.module['job'].job_info(job_index)['reqProc'], job_index,
+                                            self.currentTime, self.currentTime +
+                                            self.module['job'].job_info(job_index)['reqTime'])
         self.module['job'].job_start(job_index, self.currentTime)
         self.insert_event(1, self.currentTime+self.module['job'].job_info(job_index)['run'], 1, [2, job_index])
         return
@@ -237,7 +313,11 @@ class Cqsim_sim(Pause, Thread):
 
             temp_job_id = temp_wait[0]
             temp_job = self.module['job'].job_info(temp_job_id)
-            if self.module['node'].is_available(temp_job['reqProc']):
+            if self.module['node'].prepared_job == temp_job['id'] - 1:
+                self.debug.debug("Job ID " + str(temp_job['id'] - 1)+ " use prepared resource", 3)
+                self.start_job(temp_job_id)
+                temp_wait.pop(0)
+            elif self.module['node'].is_available(temp_job['reqProc']):
                 # print(f'temp_job_id: {temp_job_id}')
                 if self.reserve_job_id == temp_job_id:
                     self.reserve_job_id = -1

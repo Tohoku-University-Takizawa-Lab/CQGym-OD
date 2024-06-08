@@ -49,6 +49,16 @@ class Node_struc_SWF(Class_Node_struc.Node_struc):
         self.debug.debug("  Allocate"+"["+str(job_index)+"]"+" Req:"+str(proc_num)+" Avail:"+str(self.avail)+" ",4)
         return 1
 
+    def node_extend(self, job_index, proc_num, end):
+        j = 0
+        temp_num = len(self.job_list)
+        while (j<temp_num):
+            if (job_index == self.job_list[j]['job']):
+                self.job_list[j]['node'] = proc_num
+                self.job_list[j]['end'] = end
+                return 1
+            j += 1
+        return 0
         
     def node_release(self, job_index, end):
 

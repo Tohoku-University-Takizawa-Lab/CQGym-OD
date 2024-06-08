@@ -15,7 +15,9 @@ class Node_struc:
         self.tot = -1
         self.idle = -1
         self.avail = -1
-        
+        self.prepared_job = -1
+        self.preparing_job = -1
+        self.preparing_node = -1
         self.debug.line(4," ")
         self.debug.line(4,"#")
         self.debug.debug("# "+self.myInfo,1)
@@ -30,7 +32,9 @@ class Node_struc:
         self.tot = -1
         self.idle = -1
         self.avail = -1
-        
+        self.prepared_job = -1
+        self.preparing_job = -1
+        self.preparing_node = -1
     def read_list(self,source_str):
         #self.debug.debug("* "+self.myInfo+" -- read_list",5)
         result_list=[]
