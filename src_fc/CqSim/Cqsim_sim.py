@@ -211,7 +211,7 @@ class Cqsim_sim(Pause, Thread):
                 self.module['node'].prepared_arrive = self.currentTime + 1800
                 if(self.module['node'].node_allocate( 64, # magic number
                                                 self.current_event['para'][1], 
-                                                self.currentTime + 1800, # magic number
+                                                self.currentTime, # magic number
                                                 self.currentTime + 1800 + 1200)): # magic number
                     # self.debug.debug("####################### reserve resource for job " + str(self.current_event['para'][1]), 4)
                     self.module['node'].prepared_job = self.current_event['para'][1]
