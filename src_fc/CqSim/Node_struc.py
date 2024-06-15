@@ -18,6 +18,7 @@ class Node_struc:
         self.prepared_job = -1
         self.preparing_job = -1
         self.preparing_node = -1
+        self.prepared_arrive = -1
         self.debug.line(4," ")
         self.debug.line(4,"#")
         self.debug.debug("# "+self.myInfo,1)
@@ -35,6 +36,7 @@ class Node_struc:
         self.prepared_job = -1
         self.preparing_job = -1
         self.preparing_node = -1
+        self.prepared_arrive = -1
     def read_list(self,source_str):
         #self.debug.debug("* "+self.myInfo+" -- read_list",5)
         result_list=[]
@@ -134,6 +136,18 @@ class Node_struc:
     def get_avail(self):
         #self.debug.debug("* "+self.myInfo+" -- get_avail",6)
         return self.avail
+            
+    def get_arrive(self):
+        #self.debug.debug("* "+self.myInfo+" -- get_arrive",6)
+        return self.prepared_arrive
+        
+    def get_preparing_node(self):
+        #self.debug.debug("* "+self.myInfo+" -- get_preparing_node",6)
+        return self.preparing_node
+    
+    def get_preparing_status(self):
+        #self.debug.debug("* "+self.myInfo+" -- get_preparing_status",6)
+        return (self.preparing_job != -1)
         
     def node_allocate(self, proc_num, job_index, start, end):
         #self.debug.debug("* "+self.myInfo+" -- node_allocate",5)

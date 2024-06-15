@@ -207,7 +207,8 @@ class Cqsim_sim(Pause, Thread):
         elif (self.current_event['para'][0] == 3 and self.module['node'].prepared_job == -1 and self.module['node'].preparing_job == -1):
             # if prevision event set successfully
             if(self.set_wait(self.current_event['para'][1])):
-                # enough resource directly
+                # arrive time
+                self.module['node'].prepared_arrive = self.currentTime + 1800
                 if(self.module['node'].node_allocate( 64, # magic number
                                                 self.current_event['para'][1], 
                                                 self.currentTime + 1800, # magic number
@@ -245,6 +246,7 @@ class Cqsim_sim(Pause, Thread):
         # prevision job finished
         if (self.module['node'].prepared_job == job_index):
             self.module['node'].prepared_job = -1
+            self.module['node'].prepared_arrive = -1
         # collecting resource
         if (self.module['node'].preparing_job != -1):
             # enough after allocation
