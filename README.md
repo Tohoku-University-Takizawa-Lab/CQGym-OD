@@ -1,10 +1,10 @@
-# CQGym-mec: Joint Scheduling of MEC and HPC tasks
+# CQGym-OD: Joint Scheduling of on-demand and rigid jobs in HPC systems
 
 ## Background 
-Multi-access Edge Computing (MEC) and High Performance Computing (HPC) tasks are jointly scheduled on supercomputers. This repository utilizes Reinforcement Learning (LR) to jointly schedule these tasks.
+Recently, on-demand and rigid jobs are jointly scheduled in High Performance Computing (HPC) systems. This repository utilizes Reinforcement Learning (LR) to jointly schedule these jobs.
 
-## CQGym-mec
-CQGym-mec is developed based on [CQGym](https://github.com/SPEAR-UIC/CQGym). 
+## CQGym-OD
+CQGym-OD is developed based on [CQGym](https://github.com/SPEAR-UIC/CQGym). 
 
 ## Features
 The scheduling result is evaluated.
