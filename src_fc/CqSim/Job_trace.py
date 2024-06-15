@@ -266,7 +266,7 @@ class Job_trace:
         self.jobTrace[job_index]["score"]=job_score
         self.jobTrace[job_index]["estStart"]=job_est_start
         self.job_submit_list.remove(job_index)
-        if (self.jobTrace[job_index]["id"] - 1 == self.job_wait_on_demand_id and len(self.job_wait_list) > 0) : 
+        if ((self.jobTrace[job_index]["id"] % 2000) - 1 == self.job_wait_on_demand_id and len(self.job_wait_list) > 0) : 
            # prevision job arrives
            self.job_wait_list.insert(0, job_index)
         else:
@@ -298,7 +298,7 @@ class Job_trace:
         self.debug.debug(" "+"["+str(job_index)+"]"+" Req:"+str(self.jobTrace[job_index]['reqProc'])+" Run:"+str(self.jobTrace[job_index]['run'])+" ",4)
         self.jobTrace[job_index]["state"]=3
         # self.debug.debug(str(self.job_wait_on_demand_id) + " before clear",4)
-        if (self.job_wait_on_demand_id == self.jobTrace[job_index]["id"] - 1) :
+        if (self.job_wait_on_demand_id == (self.jobTrace[job_index]["id"]  % 2000)- 1) :
             self.job_wait_on_demand_id = 0
         if  time:
             self.jobTrace[job_index]['end'] = time

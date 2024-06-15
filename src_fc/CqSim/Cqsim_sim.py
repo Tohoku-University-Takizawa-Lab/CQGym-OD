@@ -90,16 +90,16 @@ class Cqsim_sim(Pause, Thread):
         i = self.read_job_pointer
         #while (i < len(self.module['job'].job_info())):
         while (i < self.module['job'].job_info_len()):
-            if (self.module['job'].job_info(i)['mec'] <= 0):
-                if (self.module['job'].job_info(i)['mec'] == -1):
+            if (self.module['job'].job_info(i)['o_d'] <= 0):
+                if (self.module['job'].job_info(i)['o_d'] == -1):
                     self.debug.debug("####################### on demand job loaded ##########################", 4) 
                 self.insert_event(1,self.module['job'].job_info(i)['submit'],2,[1,i])
                 self.previous_read_job_time = self.module['job'].job_info(i)['submit']
                 self.debug.debug("  "+"Insert job["+"2"+"] "+str(self.module['job'].job_info(i)['submit']),4)
             else:
-                self.debug.debug("####################### on demand job notice of " + str(self.module['job'].job_info(i)['mec'] - 1) + " loaded ##########################", 4)
+                self.debug.debug("####################### on demand job notice of " + str(self.module['job'].job_info(i)['o_d'] - 1) + " loaded ##########################", 4)
                 # submit a resource prevision event, event type 3, job id received from notice
-                self.insert_event(3, self.module['job'].job_info(i)['submit'],2,[3,self.module['job'].job_info(i)['mec'] - 1])
+                self.insert_event(3, self.module['job'].job_info(i)['submit'],2,[3,(self.module['job'].job_info(i)['o_d'] % 2000) - 1])
             i += 1
 
         if temp_return == None or temp_return < 0 :
@@ -199,7 +199,7 @@ class Cqsim_sim(Pause, Thread):
     def event_job(self, para_in = None):
 
         if (self.current_event['para'][0] == 1):
-            if (self.module['job'].job_info(self.current_event['para'][1])['mec'] == -1):
+            if (self.module['job'].job_info(self.current_event['para'][1])['o_d'] == -1):
                 self.debug.debug("####################### on demand job " + str(self.current_event['para'][1]) + " submitted", 3)
             self.submit(self.current_event['para'][1])
         elif (self.current_event['para'][0] == 2):
@@ -318,8 +318,8 @@ class Cqsim_sim(Pause, Thread):
 
             temp_job_id = temp_wait[0]
             temp_job = self.module['job'].job_info(temp_job_id)
-            if self.module['node'].prepared_job == temp_job['id'] - 1:
-                self.debug.debug("Job ID " + str(temp_job['id'] - 1)+ " use prepared resource", 3)
+            if self.module['node'].prepared_job == (temp_job['id'] % 2000) - 1:
+                self.debug.debug("Job ID " + str((temp_job['id'] % 2000) - 1)+ " use prepared resource", 3)
                 self.start_job(temp_job_id)
                 temp_wait.pop(0)
             elif self.module['node'].is_available(temp_job['reqProc']):
