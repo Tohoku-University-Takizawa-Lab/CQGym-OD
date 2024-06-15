@@ -243,12 +243,14 @@ class Cqsim_sim(Pause, Thread):
         #self.debug.debug("# "+self.myInfo+" -- finish",5) 
         self.debug.debug("[Finish]  "+str(job_index),3)
         self.module['node'].node_release(job_index,self.currentTime)
-        # prevision job finished
-        if (self.module['node'].prepared_job == job_index):
+        # resource collecting or collected job finished
+        if (self.module['node'].prepared_job == job_index or self.module['node'].preparing_job == job_index):
             self.module['node'].prepared_job = -1
             self.module['node'].prepared_arrive = -1
+            self.module['node'].preparing_job = -1
+            self.module['node'].preparing_node = -1
         # collecting resource
-        if (self.module['node'].preparing_job != -1):
+        elif (self.module['node'].preparing_job != -1):
             # enough after allocation
             if ((self.module['node'].avail + self.module['node'].preparing_node) >= 64):
                 # self.debug.debug("####################### job " + str(self.module['node'].preparing_job) + " collect " + str(64 - self.module['node'].preparing_node) + " and become sufficient.", 4)
@@ -259,6 +261,7 @@ class Cqsim_sim(Pause, Thread):
                 self.module['node'].node_extend(self.module['node'].preparing_job, 64, self.currentTime + 1200) # magic number
                 self.module['node'].prepared_job = self.module['node'].preparing_job
                 self.module['node'].preparing_job = -1
+                self.module['node'].preparing_node = -1
             # still need allocation
             else: 
                 # self.debug.debug("####################### job " + str(self.module['node'].preparing_job) + " collect " + str(self.module['node'].avail) + " and still need.", 4)
