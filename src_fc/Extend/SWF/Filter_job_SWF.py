@@ -60,6 +60,7 @@ class Filter_job_SWF(filter_job.Filter_job):
                     num_part = ""    # 16
                     num_pre = ""    # 17
                     thinkTime = ""    # 18
+                    o_d = ""    # 19
                     
                     for i in range(strNum):
                         if (tempStr[i] == '\n'):
@@ -106,6 +107,8 @@ class Filter_job_SWF(filter_job.Filter_job):
                                 num_pre = num_pre + tempStr[i] 
                             elif k == 17:
                                 thinkTime = thinkTime + tempStr[i] 
+                            elif k == 18:
+                                o_d = o_d + tempStr[i] 
                             
                     if (min_sub<0):
                         min_sub=float(submit)
@@ -134,6 +137,7 @@ class Filter_job_SWF(filter_job.Filter_job):
                                 'num_part':int(num_part),\
                                 'num_pre':int(num_pre),\
                                 'thinkTime':int(thinkTime),\
+                                'o_d':int(o_d),\
                                 'start':-1,\
                                 'end':-1,\
                                 'score':0,\
@@ -178,6 +182,8 @@ class Filter_job_SWF(filter_job.Filter_job):
                         f2.write(str(tempInfo['num_pre']))
                         f2.write(sep_sign)
                         f2.write(str(tempInfo['thinkTime']))
+                        f2.write(sep_sign)
+                        f2.write(str(tempInfo['o_d']))
                         f2.write("\n")
                         #self.jobList.append(tempInfo)
                         temp_readNum+=1
@@ -234,6 +240,7 @@ class Filter_job_SWF(filter_job.Filter_job):
                     num_part = ""    # 16
                     num_pre = ""    # 17
                     thinkTime = ""    # 18
+                    o_d = ""    # 19, 0 for rigid job, -1 for on demand job, >= 1 for demand id for on demand job notice.
                     
                     for i in range(strNum):
                         if (tempStr[i] == '\n'):
@@ -280,6 +287,8 @@ class Filter_job_SWF(filter_job.Filter_job):
                                 num_pre = num_pre + tempStr[i] 
                             elif k == 17:
                                 thinkTime = thinkTime + tempStr[i] 
+                            elif k == 18:
+                                o_d = o_d + tempStr[i] 
                             
                     if (min_sub<0):
                         min_sub=float(submit)
@@ -308,6 +317,7 @@ class Filter_job_SWF(filter_job.Filter_job):
                                 'num_part':int(num_part),\
                                 'num_pre':int(num_pre),\
                                 'thinkTime':int(thinkTime),\
+                                'o_d':int(o_d),\
                                 'start':-1,\
                                 'end':-1,\
                                 'score':0,\
@@ -392,6 +402,8 @@ class Filter_job_SWF(filter_job.Filter_job):
             f2.write(str(jobResult_o['num_pre']))
             f2.write(sep_sign)
             f2.write(str(jobResult_o['thinkTime']))
+            f2.write(sep_sign)
+            f2.write(str(jobResult_o['o_d']))
             f2.write("\n")
         f2.close()
     
