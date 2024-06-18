@@ -20,6 +20,7 @@ class Job_trace:
         self.jobFile = None
         self.read_input_freq = read_input_freq
         self.num_delete_jobs = 0
+        self.num_wait_od_job = 0
 
         self.debug.line(4," ")
         self.debug.line(4,"#")
@@ -57,6 +58,7 @@ class Job_trace:
         self.job_run_list=[]
         #self.job_done_list=[]
         self.num_delete_jobs = 0
+        self.num_wait_od_job = 0
 
     def initial_import_job_file(self, job_file):
         self.temp_start=self.start
@@ -271,6 +273,10 @@ class Job_trace:
         if ((self.jobTrace[job_index]["id"] % 2000) - 1 == self.job_wait_on_demand_id and len(self.job_wait_list) > 0) : 
            # prevision job arrives
            self.job_wait_list.insert(0, job_index)
+           self.num_wait_od_job += 1
+        elif (self.jobTrace[job_index]["o_d"] == -1):
+            self.job_wait_list.insert(self.num_wait_od_job, job_index)
+            self.num_wait_od_job += 1
         else:
             self.job_wait_list.append(job_index)
         self.job_wait_size += self.jobTrace[job_index]["reqProc"]
@@ -300,8 +306,10 @@ class Job_trace:
         self.debug.debug(" "+"["+str(job_index)+"]"+" Req:"+str(self.jobTrace[job_index]['reqProc'])+" Run:"+str(self.jobTrace[job_index]['run'])+" ",4)
         self.jobTrace[job_index]["state"]=3
         # self.debug.debug(str(self.job_wait_on_demand_id) + " before clear",4)
-        if (self.job_wait_on_demand_id == (self.jobTrace[job_index]["id"]  % 2000)- 1) :
-            self.job_wait_on_demand_id = 0
+        if (self.jobTrace[job_index]["o_d"]) == - 1 :
+            self.num_wait_od_job -= 1
+            if self.num_wait_od_job == 0:
+                self.job_wait_on_demand_id = 0
         if  time:
             self.jobTrace[job_index]['end'] = time
         # self.debug.debug(str(self.job_wait_on_demand_id) + " after clear",4)
