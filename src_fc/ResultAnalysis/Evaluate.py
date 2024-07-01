@@ -100,5 +100,5 @@ for i in range (len(log)):
             instant_response_number += 1
         if log[i][4] <= 1800: # hyper parameter in schedule agent
             # print(log[i][0])
-            instant_response_number += 1
+            quick_response_number += 1
 print(o_d_number, quick_response_number, instant_response_number)
