@@ -313,7 +313,9 @@ class Cqsim_sim(Pause, Thread):
             # Communicate with GymEnvironment.
             # ************ #
             print("Wait Queue at StartScan - ", temp_wait)
-            if temp_wait[0] != self.reserve_job_id:
+            temp_job_id = temp_wait[0]
+            temp_job = self.module['job'].job_info(temp_job_id)
+            if temp_wait[0] != self.reserve_job_id and temp_job['o_d'] != -1:
                 temp_wait = self.reorder_queue(temp_wait)
 
             temp_job_id = temp_wait[0]

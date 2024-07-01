@@ -12,6 +12,9 @@ class GymState:
         self.wait_que = None
         self.wait_que_size = 0
         self.job_info = {}
+        self.on_demand_arrive = None
+        self.preparing_node = None
+        self.preparing_status = None
 
         self.job_vector = []
         self.node_vector = []
@@ -30,6 +33,39 @@ class GymState:
         self.wait_que = wait_que_indices[:]
         self.wait_que_size = len(self.wait_que)
         self.job_info = job_info_dict
+
+        self.wait_job = [job_info_dict[ind] for ind in wait_que_indices]
+
+        wait_job_input = self.preprocessing_queued_jobs(
+            self.wait_job, current_time)
+        system_status_input = self.preprocessing_system_status(
+            node_info_list, current_time)
+        self.feature_vector = self.make_feature_vector(
+            wait_job_input, system_status_input)
+
+        def vector_reshape(vec):
+            return vec.reshape(tuple([1]) + vec.shape)
+        self.feature_vector = vector_reshape(self.feature_vector)
+
+        self.total_nodes = len(node_info_list)
+        self.idle_nodes = idle_nodes_count
+
+    def define_state_on_demand(self, current_time, wait_que_indices, job_info_dict, node_info_list, idle_nodes_count, on_demand_arrive, preparing_node, preparing_status):
+        """
+        :param wait_que_indices: List[Integer] - indices of the jobs in wait que, List size limited.
+        :param job_info_dict: Dict{Integer: Info} - Information of all the jobs from simulator
+        :param node_info_list: List[Node Info] - Information of all the nodes from simulator
+        :return: State parsable by the RL Model in use - Eg. Numpy Array
+        """
+        self.current_time = current_time
+        self.wait_que = wait_que_indices[:]
+        self.wait_que_size = len(self.wait_que)
+        self.job_info = job_info_dict
+        self.on_demand_arrive = on_demand_arrive
+        self.preparing_node = preparing_node
+        self.preparing_status = preparing_status
+
+        print("------------------------- " + str(self.on_demand_arrive) + " " + str(self.preparing_node) + " " + str(self.preparing_status) + " -------------------------")
 
         self.wait_job = [job_info_dict[ind] for ind in wait_que_indices]
 
@@ -140,5 +176,94 @@ class GymState:
         tmp_reward += selected_job_priority * w3
 
        # tmp_reward = selected_job_requested_nodes / max_job_size_in_que
+
+        return tmp_reward
+
+    def get_reward_o_d(self, selected_job):
+
+        max_wait_time_in_que, max_job_size_in_que, total_wait_time, total_wait_core_seconds, total_wait_size = self.get_max_wait_time_in_queue()
+
+        tmp_reward = 0
+        running = self.total_nodes - self.idle_nodes
+        selected_job_info = self.job_info[selected_job]
+        selected_job_requested_nodes = selected_job_info['reqProc']
+        selected_job_wait_time = self.current_time - \
+            selected_job_info['submit']
+        if selected_job_info['o_d'] == 0:
+            print("######################################## rigid ########################################")
+            o_d_job_bonus_time = 0
+        if selected_job_info['o_d'] == -1:
+            print("######################################## on-demand ########################################")
+            if ( selected_job_wait_time > 3600 ):
+                o_d_job_bonus_time = 0
+            else:
+                o_d_job_bonus_time = selected_job_wait_time
+
+        selected_job_priority = selected_job_requested_nodes / self.total_nodes
+        w1, w2, w3, w4 = 1 / 3, 1 / 3, 1 / 3, 1
+
+        if self.idle_nodes < selected_job_requested_nodes:
+            tmp_reward += running / self.total_nodes * w1
+        else:
+            tmp_reward += (selected_job_requested_nodes +
+                           running) / self.total_nodes * w1
+
+        if max_wait_time_in_que >= 21600:
+            tmp_reward += selected_job_wait_time / max_wait_time_in_que * w2
+        else:
+            tmp_reward += selected_job_wait_time / 21600 * w2
+
+        tmp_reward += selected_job_priority * w3
+
+        if o_d_job_bonus_time > 0:
+            tmp_reward += o_d_job_bonus_time / 3600 * w4
+
+       # tmp_reward = selected_job_requested_nodes / max_job_size_in_que
+
+        return tmp_reward
+    
+    def get_reward_on_demand(self, selected_job):
+
+        max_wait_time_in_que, max_job_size_in_que, total_wait_time, total_wait_core_seconds, total_wait_size = self.get_max_wait_time_in_queue()
+
+        tmp_reward = 0
+        running = self.total_nodes - self.idle_nodes
+        selected_job_info = self.job_info[selected_job]
+        selected_job_requested_nodes = selected_job_info['reqProc']
+        selected_job_wait_time = self.current_time - \
+            selected_job_info['submit']
+
+        selected_job_priority = selected_job_requested_nodes / self.total_nodes
+        w1, w2, w3 = 1 / 3, 1 / 3, 1 / 3
+
+        # node
+        if self.idle_nodes < selected_job_requested_nodes:
+            tmp_reward += running / self.total_nodes * w1
+        else:
+            tmp_reward += (selected_job_requested_nodes +
+                           running) / self.total_nodes * w1
+
+        # wait time
+        if max_wait_time_in_que >= 21600:
+            tmp_reward += selected_job_wait_time / max_wait_time_in_que * w2
+        else:
+            tmp_reward += selected_job_wait_time / 21600 * w2
+
+        # priority (node)
+        tmp_reward += selected_job_priority * w3
+
+       # tmp_reward = selected_job_requested_nodes / max_job_size_in_que
+
+       # on demand reward calculation
+        if (self.preparing_status) :
+            print("arrive time and current time ", self.on_demand_arrive, self.current_time)
+            print("prepared node ", self.preparing_node)
+            tmp_reward = 0
+            if (selected_job_info['run'] + self.current_time > self.on_demand_arrive): 
+                print("punish")
+                tmp_reward -= (selected_job_info['reqProc'] / 64)
+            else:
+                print("reward")
+                tmp_reward += (selected_job_info['reqProc'] / 64)
 
         return tmp_reward

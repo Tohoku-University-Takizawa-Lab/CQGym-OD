@@ -66,11 +66,20 @@ class CqsimEnv(Env):
         :return: [GymState]
         """
         self.gym_state = GymState()
-        self.gym_state.define_state(self.simulator.currentTime,  # Current time in the simulator.
+        # self.gym_state.define_state(self.simulator.currentTime,  # Current time in the simulator.
+        #                             self.simulator.simulator_wait_que_indices,  # Current Wait Queue in focus.
+        #                             self.simulator.module['job'].job_info(-1),  # All the JobInfo Dict.
+        #                             self.simulator.module['node'].nodeStruc,  # All the NodeStruct Dict.
+        #                             self.simulator.module['node'].get_idle())  # Number of Nodes available.
+
+        self.gym_state.define_state_on_demand(self.simulator.currentTime,  # Current time in the simulator.
                                     self.simulator.simulator_wait_que_indices,  # Current Wait Queue in focus.
                                     self.simulator.module['job'].job_info(-1),  # All the JobInfo Dict.
                                     self.simulator.module['node'].nodeStruc,  # All the NodeStruct Dict.
-                                    self.simulator.module['node'].get_idle())  # Number of Nodes available.
+                                    self.simulator.module['node'].get_idle(),  # Number of Nodes available.
+                                    self.simulator.module['node'].get_arrive(),  # 
+                                    self.simulator.module['node'].get_preparing_node(),  # 
+                                    self.simulator.module['node'].get_preparing_status())  # 
         return self.gym_state
 
     def step(self, action: int):
@@ -89,7 +98,8 @@ class CqsimEnv(Env):
         self.simulator.simulator_wait_que_indices = [self.simulator.simulator_wait_que_indices[ind]] + \
                                                      self.simulator.simulator_wait_que_indices[:ind] + \
                                                      self.simulator.simulator_wait_que_indices[ind + 1:]
-        reward = self.gym_state.get_reward(self.simulator.simulator_wait_que_indices[0])
+        # reward = self.gym_state.get_reward(self.simulator.simulator_wait_que_indices[0])
+        reward = self.gym_state.get_reward_on_demand(self.simulator.simulator_wait_que_indices[0])
 
         # Maintaining data for GymGraphics
         self.rewards.append(reward)
