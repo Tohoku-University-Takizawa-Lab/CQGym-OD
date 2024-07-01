@@ -209,6 +209,11 @@ class Cqsim_sim(Pause, Thread):
             if(self.set_wait(self.current_event['para'][1])):
                 # arrive time
                 self.module['node'].prepared_arrive = self.currentTime + 1800
+                #'''cua_f only trigger resource collecting
+                self.module['node'].preparing_job = self.current_event['para'][1]
+                self.module['node'].preparing_node = 0
+                #'''
+                '''cua will start collecting directly
                 if(self.module['node'].node_allocate( 64, # magic number
                                                 self.current_event['para'][1], 
                                                 self.currentTime, # magic number
@@ -224,6 +229,7 @@ class Cqsim_sim(Pause, Thread):
                                                 self.current_event['para'][1],\
                                                 self.currentTime, # magic number
                                                 self.currentTime + 1800 + 1200)# magic number
+                '''
         # Obsolete
         # self.score_calculate()
         self.start_scan()
