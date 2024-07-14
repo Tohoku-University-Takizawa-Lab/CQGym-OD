@@ -261,9 +261,11 @@ class GymState:
             tmp_reward = 0
             if (selected_job_info['run'] + self.current_time > self.on_demand_arrive): 
                 print("punish")
-                tmp_reward -= (selected_job_info['reqProc'] / 64)
+                tmp_reward -= (selected_job_info['reqProc'] / 128) / 2
+                tmp_reward -= ((self.current_time + selected_job_info['run'] - self.on_demand_arrive) / selected_job_info['run']) / 2
             else:
                 print("reward")
-                tmp_reward += (selected_job_info['reqProc'] / 64)
+                tmp_reward += (selected_job_info['reqProc'] / 128) / 2
+                tmp_reward += (selected_job_info['run'] / (self.on_demand_arrive - self.current_time)) / 2
 
         return tmp_reward
