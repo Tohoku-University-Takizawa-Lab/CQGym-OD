@@ -20,7 +20,7 @@ class DQL:
         self.lr = learning_rate
         self.gamma = gamma
         self.memory = deque(maxlen=20)
-        self.reward_seq = []
+        self.rewards_seq = []
 
         self.policy, self.predict = self.build_policy()
 
@@ -76,7 +76,7 @@ class DQL:
 
     def remember(self, obs, action, reward, new_obs):
         self.memory.append([obs, action, reward, new_obs])
-        self.reward_seq.append(reward)
+        self.rewards_seq.append(reward)
 
     def save(self, policy_fp, predict_fp):
         self.policy.save_weights(policy_fp)
